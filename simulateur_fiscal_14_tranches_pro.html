@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulateur Fiscal Comparatif : Système Actuel vs Réforme 14 Tranches</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: rgba(18, 26, 43, 0.85);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-soft: #cbd5e1;
+      --primary: #38bdf8;
+      --primary-glow: rgba(56, 189, 248, 0.25);
+      --green: #10b981;
+      --green-glow: rgba(16, 185, 129, 0.15);
+      --red: #f43f5e;
+      --red-glow: rgba(244, 63, 94, 0.15);
+      --neutral: #64748b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; }
+    body {
+      background-color: var(--bg);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.12) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.12) 0px, transparent 50%);
+      color: var(--text);
+      padding: 32px 16px;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    .wrapper {
+      width: 100%;
+      max-width: 760px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 24px;
+      padding: 36px 32px;
+      box-shadow: 0 25px 60px -15px rgba(0,0,0,0.6);
+    }
+    @media (max-width: 600px) {
+      .wrapper { padding: 24px 18px; border-radius: 18px; }
+    }
+    header { text-align: center; margin-bottom: 30px; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 100px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 14px;
+    }
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+    p.subtitle {
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    
+    /* Toggle Mode */
+    .status-toggle {
+      display: flex;
+      background: #0c1322;
+      padding: 4px;
+      border-radius: 12px;
+      border: 1px solid var(--card-border);
+      margin-bottom: 24px;
+      gap: 4px;
+    }
+    .status-btn {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 10px 14px;
+      border-radius: 9px;
+      font-weight: 600;
+      font-size: 0.88rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+    }
+    .status-btn.active {
+      background: #1e293b;
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    /* Form Section */
+    .form-panel {
+      background: rgba(12, 19, 34, 0.6);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    .inputs-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 580px) {
+      .inputs-grid { grid-template-columns: 1fr; }
+    }
+    .input-box label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-soft);
+      margin-bottom: 6px;
+    }
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .input-wrapper input, .input-box select {
+      width: 100%;
+      background: #090e1a;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 12px 14px;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+    .input-wrapper input:focus, .input-box select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-glow);
+    }
+    .unit-tag {
+      position: absolute;
+      right: 14px;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      font-weight: 500;
+      pointer-events: none;
+    }
+
+    .summary-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      background: rgba(56, 189, 248, 0.05);
+      border: 1px dashed rgba(56, 189, 248, 0.2);
+      border-radius: 10px;
+      font-size: 0.88rem;
+    }
+    .summary-bar .item { display: flex; align-items: center; gap: 8px; }
+    .summary-bar strong { color: var(--primary); font-weight: 700; font-size: 0.95rem; }
+
+    /* Results Cards */
+    .results-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    @media (max-width: 580px) {
+      .results-grid { grid-template-columns: 1fr; }
+    }
+    .res-card {
+      background: #0d1526;
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 22px 20px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s;
+    }
+    .res-card.highlight {
+      border-color: rgba(56, 189, 248, 0.3);
+      box-shadow: 0 8px 24px -6px var(--primary-glow);
+    }
+    .res-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+    .res-amount {
+      font-size: 1.85rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #fff;
+    }
+    .res-sub {
+      font-size: 0.88rem;
+      color: var(--text-soft);
+      margin-top: 4px;
+      font-weight: 500;
+    }
+    .res-meta {
+      display: inline-flex;
+      align-items: center;
+      margin-top: 14px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.04);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    /* Verdict Banner */
+    .verdict-box {
+      border-radius: 14px;
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 0.95rem;
+      margin-bottom: 24px;
+      border: 1px solid transparent;
+      animation: fadeIn 0.3s ease;
+    }
+    .verdict-icon {
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+    .verdict-content { flex: 1; }
+    .verdict-box strong { font-weight: 700; }
+    
+    .verdict-gain {
+      background: var(--green-glow);
+      border-color: rgba(16, 185, 129, 0.3);
+      color: #6ee7b7;
+    }
+    .verdict-neutre {
+      background: rgba(100, 116, 139, 0.15);
+      border-color: rgba(100, 116, 139, 0.3);
+      color: #e2e8f0;
+    }
+    .verdict-hausse {
+      background: var(--red-glow);
+      border-color: rgba(244, 63, 94, 0.3);
+      color: #fda4af;
+    }
+
+    /* Breakdown Details */
+    details {
+      background: rgba(12, 19, 34, 0.5);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+    summary {
+      padding: 14px 18px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--primary);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::after {
+      content: "↓";
+      transition: transform 0.2s ease;
+    }
+    details[open] summary::after {
+      transform: rotate(180deg);
+    }
+    .details-table-wrapper {
+      padding: 0 18px 16px 18px;
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+    th {
+      text-align: left;
+      padding: 8px 10px;
+      color: var(--text-muted);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      font-weight: 600;
+    }
+    td {
+      padding: 9px 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: var(--text-soft);
+    }
+    th.num, td.num { text-align: right; }
+    tr:last-child td { border-bottom: none; }
+
+    /* Footer & Disclaimers */
+    footer {
+      border-top: 1px solid var(--card-border);
+      padding-top: 18px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    footer ul { margin-left: 18px; margin-top: 6px; margin-bottom: 10px; }
+    .source-tag { font-size: 0.72rem; color: #475569; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <header>
+      <div class="badge">Simulateur Fiscal Comparatif</div>
+      <h1>Barème Actuel vs Réforme 14 Tranches</h1>
+      <p class="subtitle">Évaluez l'impact exact de la proposition fiscale sur votre foyer (point d'équilibre à 4 000 €/part)</p>
+    </header>
+
+    <!-- Toggle situation -->
+    <div class="status-toggle">
+      <button type="button" id="btn-celib" class="status-btn">Célibataire / Personne seule</button>
+      <button type="button" id="btn-couple" class="status-btn active">En couple (Mariage / Pacs)</button>
+    </div>
+
+    <!-- Inputs Panel -->
+    <div class="form-panel">
+      <div class="inputs-grid">
+        <div class="input-box">
+          <label id="lbl-sal1" for="sal1">Salaire net Conjoint 1</label>
+          <div class="input-wrapper">
+            <input type="number" id="sal1" value="2500" min="0" step="50">
+            <span class="unit-tag">€ / mois</span>
+          </div>
+        </div>
+        <div class="input-box" id="box-sal2">
+          <label for="sal2">Salaire net Conjoint 2</label>
+          <div class="input-wrapper">
+            <input type="number" id="sal2" value="1500" min="0" step="50">
+            <span class="unit-tag">€ / mois</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="inputs-grid" style="margin-bottom: 14px;">
+        <div class="input-box" style="grid-column: 1 / -1;">
+          <label for="enfants">Enfants à charge</label>
+          <select id="enfants">
+            <option value="0">0 enfant (Aucune part additionnelle)</option>
+            <option value="1">1 enfant (+0,5 part fiscale)</option>
+            <option value="2">2 enfants (+1,0 part fiscale)</option>
+            <option value="3">3 enfants (+2,0 parts fiscales)</option>
+            <option value="4">4 enfants (+3,0 parts fiscales)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="summary-bar">
+        <div class="item">
+          <span>Revenu global :</span>
+          <strong id="disp-total-net">4 000 € / mois</strong>
+        </div>
+        <div class="item">
+          <span>Quotient familial :</span>
+          <strong id="disp-parts">2,0 parts</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results Cards -->
+    <div class="results-grid">
+      <div class="res-card">
+        <div class="res-title">Système Actuel (5 tranches)</div>
+        <div class="res-amount" id="res-actuel-an">0 €</div>
+        <div class="res-sub" id="res-actuel-mois">0 € / mois</div>
+        <div class="res-meta" id="res-actuel-taux">Taux effectif : 0%</div>
+      </div>
+
+      <div class="res-card highlight">
+        <div class="res-title">Réforme LFI / NFP (14 tranches)</div>
+        <div class="res-amount" id="res-lfi-an">0 €</div>
+        <div class="res-sub" id="res-lfi-mois">0 € / mois</div>
+        <div class="res-meta" id="res-lfi-taux">Taux effectif : 0%</div>
+      </div>
+    </div>
+
+    <!-- Verdict Banner -->
+    <div class="verdict-box verdict-neutre" id="verdict">
+      <div class="verdict-icon" id="verdict-icon">⚖️</div>
+      <div class="verdict-content" id="verdict-text">Calcul en cours...</div>
+    </div>
+
+    <!-- Technical Details Table -->
+    <details>
+      <summary>Détail du calcul tranche par tranche (Barème 14 tranches)</summary>
+      <div class="details-table-wrapper">
+        <p style="margin-bottom: 12px; color: var(--text-muted); font-size: 0.8rem;">
+          Revenu imposable du foyer (abattement 10% déduit) : <strong style="color:#fff;" id="det-imposable-total">0 €</strong> 
+          — soit <strong style="color:var(--primary);" id="det-imposable-part">0 €</strong> par part fiscale.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Tranche de revenu</th>
+              <th>Taux</th>
+              <th class="num">Assiette / part</th>
+              <th class="num">Impôt foyer</th>
+            </tr>
+          </thead>
+          <tbody id="table-body"></tbody>
+        </table>
+      </div>
+    </details>
+
+    <footer>
+      <strong>Paramètres et méthodologie appliqués :</strong>
+      <ul>
+        <li><strong>Frais professionnels :</strong> déduction forfaitaire légale de 10 % appliquée sur les salaires nets.</li>
+        <li><strong>Quotient familial :</strong> imposition collective conforme aux règles du Code Général des Impôts (assiette calculée par part, puis sommée).</li>
+        <li><strong>Seuil pivot :</strong> neutralité fiscale autour de 4 000 € net par part fiscale. En deçà, l'impôt diminue pour environ 9 foyers sur 10.</li>
+      </ul>
+      <div class="source-tag">
+        Références : Barème officiel de l'impôt sur le revenu (Direction Générale des Finances Publiques) ; Contrat de législature et document macroéconomique du Nouveau Front Populaire ; Barème technique à 14 tranches de <em>L'Avenir en commun</em>.
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    var mode = "couple";
+
+    var tranchesActuel = [
+      { min: 0, max: 11294, t: 0.00 },
+      { min: 11294, max: 28797, t: 0.11 },
+      { min: 28797, max: 82341, t: 0.30 },
+      { min: 82341, max: 177106, t: 0.41 },
+      { min: 177106, max: Infinity, t: 0.45 }
+    ];
+
+    var tranchesLFI = [
+      { min: 0, max: 10292, t: 0.01, label: "Jusqu'à 10 292 €" },
+      { min: 10292, max: 15438, t: 0.05, label: "10 292 € à 15 438 €" },
+      { min: 15438, max: 20584, t: 0.10, label: "15 438 € à 20 584 €" },
+      { min: 20584, max: 27789, t: 0.15, label: "20 584 € à 27 789 €" },
+      { min: 27789, max: 30876, t: 0.20, label: "27 789 € à 30 876 €" },
+      { min: 30876, max: 33964, t: 0.25, label: "30 876 € à 33 964 €" },
+      { min: 33964, max: 38081, t: 0.30, label: "33 964 € à 38 081 €" },
+      { min: 38081, max: 44256, t: 0.35, label: "38 081 € à 44 256 €" },
+      { min: 44256, max: 61752, t: 0.40, label: "44 256 € à 61 752 €" },
+      { min: 61752, max: 102921, t: 0.45, label: "61 752 € à 102 921 €" },
+      { min: 102921, max: 144089, t: 0.50, label: "102 921 € à 144 089 €" },
+      { min: 144089, max: 267594, t: 0.55, label: "144 089 € à 267 594 €" },
+      { min: 267594, max: 411683, t: 0.60, label: "267 594 € à 411 683 €" },
+      { min: 411683, max: Infinity, t: 0.90, label: "Plus de 411 683 €" }
+    ];
+
+    function setMode(m) {
+      mode = m;
+      document.getElementById("btn-celib").className = "status-btn " + (mode === "celib" ? "active" : "");
+      document.getElementById("btn-couple").className = "status-btn " + (mode === "couple" ? "active" : "");
+      
+      var boxSal2 = document.getElementById("box-sal2");
+      var lblSal1 = document.getElementById("lbl-sal1");
+      if (mode === "celib") {
+        boxSal2.style.display = "none";
+        lblSal1.textContent = "Salaire net mensuel";
+      } else {
+        boxSal2.style.display = "block";
+        lblSal1.textContent = "Salaire net Conjoint 1";
+      }
+      calc();
+    }
+
+    function calcBareme(rParPart, brackets) {
+      var total = 0;
+      var rows = [];
+      for (var i = 0; i < brackets.length; i++) {
+        var b = brackets[i];
+        if (rParPart > b.min) {
+          var taxable = Math.min(rParPart, b.max) - b.min;
+          var impot = taxable * b.t;
+          total += impot;
+          rows.push({ label: b.label || "", t: b.t, taxable: taxable, tax: impot });
+        } else {
+          rows.push({ label: b.label || "", t: b.t, taxable: 0, tax: 0 });
+        }
+      }
+      return { total: total, rows: rows };
+    }
+
+    function getParts() {
+      var base = mode === "couple" ? 2.0 : 1.0;
+      var enf = parseInt(document.getElementById("enfants").value, 10) || 0;
+      var supp = 0;
+      if (enf === 1) supp = 0.5;
+      else if (enf === 2) supp = 1.0;
+      else if (enf === 3) supp = 2.0;
+      else if (enf >= 4) supp = 2.0 + (enf - 3);
+      return base + supp;
+    }
+
+    function formatEur(val) {
+      return Math.round(val).toLocaleString("fr-FR") + " €";
+    }
+
+    function calc() {
+      var s1 = parseFloat(document.getElementById("sal1").value) || 0;
+      var s2 = mode === "couple" ? (parseFloat(document.getElementById("sal2").value) || 0) : 0;
+      var mensuelTotal = s1 + s2;
+      var annuelTotal = mensuelTotal * 12;
+
+      document.getElementById("disp-total-net").textContent = formatEur(mensuelTotal) + " / mois";
+
+      var parts = getParts();
+      document.getElementById("disp-parts").textContent = parts.toLocaleString("fr-FR", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " parts";
+
+      var imposableTotal = annuelTotal * 0.90;
+      var imposablePart = imposableTotal / parts;
+
+      var resActuel = calcBareme(imposablePart, tranchesActuel);
+      var resLFI = calcBareme(imposablePart, tranchesLFI);
+
+      var impotActuel = Math.max(0, resActuel.total * parts);
+      var impotLFI = Math.max(0, resLFI.total * parts);
+
+      document.getElementById("res-actuel-an").textContent = formatEur(impotActuel);
+      document.getElementById("res-actuel-mois").textContent = formatEur(impotActuel / 12) + " / mois";
+      var txActuel = annuelTotal > 0 ? ((impotActuel / annuelTotal) * 100).toFixed(1) : "0.0";
+      document.getElementById("res-actuel-taux").textContent = "Taux effectif : " + txActuel + " %";
+
+      document.getElementById("res-lfi-an").textContent = formatEur(impotLFI);
+      document.getElementById("res-lfi-mois").textContent = formatEur(impotLFI / 12) + " / mois";
+      var txLFI = annuelTotal > 0 ? ((impotLFI / annuelTotal) * 100).toFixed(1) : "0.0";
+      document.getElementById("res-lfi-taux").textContent = "Taux effectif : " + txLFI + " %";
+
+      var diffAn = Math.round(impotLFI - impotActuel);
+      var diffMois = Math.round(diffAn / 12);
+      var verdict = document.getElementById("verdict");
+      var verdictIcon = document.getElementById("verdict-icon");
+      var verdictText = document.getElementById("verdict-text");
+
+      if (Math.abs(diffAn) <= 30) {
+        verdict.className = "verdict-box verdict-neutre";
+        verdictIcon.textContent = "⚖️";
+        verdictText.innerHTML = "<strong>Seuil d'équilibre :</strong> impact quasi nul sur votre foyer (écart d'environ " + Math.abs(diffAn) + " €/an, soit " + Math.abs(diffMois) + " €/mois).";
+      } else if (diffAn < 0) {
+        verdict.className = "verdict-box verdict-gain";
+        verdictIcon.textContent = "📉";
+        verdictText.innerHTML = "<strong>Gain de pouvoir d'achat :</strong> économie de <strong>" + formatEur(Math.abs(diffAn)) + " par an</strong> (soit <strong>-" + formatEur(Math.abs(diffMois)) + " / mois</strong>).";
+      } else {
+        verdict.className = "verdict-box verdict-hausse";
+        verdictIcon.textContent = "📈";
+        verdictText.innerHTML = "<strong>Contribution accrue :</strong> hausse fiscale de <strong>+" + formatEur(diffAn) + " par an</strong> (soit <strong>+" + formatEur(diffMois) + " / mois</strong>).";
+      }
+
+      document.getElementById("det-imposable-total").textContent = formatEur(imposableTotal);
+      document.getElementById("det-imposable-part").textContent = formatEur(imposablePart);
+
+      var tbody = document.getElementById("table-body");
+      tbody.innerHTML = "";
+      for (var j = 0; j < resLFI.rows.length; j++) {
+        var row = resLFI.rows[j];
+        if (row.taxable > 0) {
+          var tr = document.createElement("tr");
+          tr.innerHTML = "<td>" + row.label + "</td>" +
+                         "<td>" + Math.round(row.t * 100) + " %</td>" +
+                         "<td class='num'>" + formatEur(row.taxable) + "</td>" +
+                         "<td class='num' style='color:#fff; font-weight:600;'>" + formatEur(row.tax * parts) + "</td>";
+          tbody.appendChild(tr);
+        }
+      }
+    }
+
+    document.getElementById("btn-celib").addEventListener("click", function() { setMode("celib"); });
+    document.getElementById("btn-couple").addEventListener("click", function() { setMode("couple"); });
+    document.getElementById("sal1").addEventListener("input", calc);
+    document.getElementById("sal2").addEventListener("input", calc);
+    document.getElementById("enfants").addEventListener("change", calc);
+
+    calc();
+  </script>
+</body>
+</html>
